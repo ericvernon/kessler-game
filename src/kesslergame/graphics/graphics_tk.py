@@ -57,7 +57,7 @@ class GraphicsTK(KesslerGraphics):
 
         # create and center main window
         self.window = Tk()
-        self.window.title('Kessler')
+        self.window.title('Kessler - OMU Dev Fork')
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
         center_x = int(screen_width / 2 - self.window_width / 2)
