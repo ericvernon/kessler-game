@@ -65,10 +65,18 @@ class KesslerGame:
             self.UI_settings = {'ships': True, 'lives_remaining': True, 'accuracy': True,
                                 'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True,
                                 'controller_name': True}
-        
-    def run(self, scenario: Scenario, controllers: List[KesslerController]) -> Tuple[Score, List[PerfDict]]:
+
+    def run(self, scenario: Scenario, controllers: List[KesslerController]) -> (Score, OrderedDict):
+        generator = self.run_step(scenario, controllers)
+        while True:
+            try:
+                score, perf_list, game_state = next(generator)
+            except StopIteration as exp:
+                return score, perf_list, game_state
+
+    def run_step(self, scenario: Scenario, controllers: List[KesslerController]):
         """
-        Run an entire scenario from start to finish and return score and stop reason
+        Returns a generator that yields the score, perf_list, and game_state for each time step
         """
 
         ##################
@@ -133,6 +141,11 @@ class KesslerGame:
                 'time_limit': time_limit,
                 'random_asteroid_splits': self.random_ast_splits
             })
+
+            # Yield before game pieces have been moved to better mirror the gymnasium API
+            # The first run_step() comes from env.reset(), which should reflect the initial environment state.
+            score.finalize(sim_time, stop_reason, ships)
+            yield score, perf_list, game_state
 
             # Initialize controller time recording in performance tracker
             if self.perf_tracker:
@@ -365,7 +378,7 @@ class KesslerGame:
         score.finalize(sim_time, stop_reason, ships)
 
         # Return the score and stop condition
-        return score, perf_list
+        return score, perf_list, game_state
 
 
 class TrainerEnvironment(KesslerGame):
